@@ -623,3 +623,382 @@ double means(double a, double b)
 	return (am + hm + gm) / 3.0;
 }
 
+15.13 newexcp.cpp
+#include<iostream>
+#include<new>
+#include<cstdlib>
+using namespace std;
+
+struct Big
+{
+	double stuff[20000];
+};
+
+int main()
+{
+	Big* pb;
+	try {
+		cout << "Trying to get a big block of memory:\n";
+		pb = new Big[5000];
+		cout << "Got past the new request:\n";
+	}
+	catch (bad_alloc& ba)
+	{
+		cout << "Caught the exception!\n";
+		cout << ba.what() << endl;
+		exit(EXIT_FAILURE);
+	}
+	cout << "Memory successfully allocated\n";
+	pb[0].stuff[0] = 4;
+	cout << pb[0].stuff[0] << endl;
+	delete[] pb;
+	return 0;
+}
+
+
+15.14 sales.h
+#pragma once
+#include<stdexcept>
+#include<string>
+
+class Sales
+{
+public:
+	enum{MONTHS=12};
+	class bad_index:public std::logic_error
+	{
+	private:
+		int bi;
+	public:
+		explicit bad_index(int ix, const std::string& s = "Index error in Sales object\n");
+		int bi_val() const { return bi; };
+		virtual ~bad_index() throw(){}
+	};
+	explicit Sales(int yy = 0);
+	Sales(int yy, const double* gr, int n);
+	virtual ~Sales(){}
+	int Year() const { return year; };
+	virtual double operator[](int i) const;
+	virtual double& operator[](int i);
+private:
+	double gross[MONTHS];
+	int year;
+};
+
+class LabeledSales :public Sales
+{
+public:
+	class nbad_index :public Sales::bad_index
+	{
+	private:
+		std::string lbl;
+	public:
+		nbad_index(const std::string& lb, int ix, const std::string& s = "Index error in LabeledSales object\n");
+		const std::string& label_val() const { return lbl; }
+		virtual ~nbad_index() throw(){}
+	};
+	explicit LabeledSales(const std::string& lb = "none", int yy=0);
+	LabeledSales(const std::string& lb, int yy, const double* gr, int n);
+	virtual ~LabeledSales(){}
+	const std::string& Label() const { return label; }
+	virtual double operator[](int i) const;
+	virtual double& operator[](int i);
+private:
+	std::string label;
+};
+
+
+15.15 sales.cpp
+#include"sales.h"
+using std::string;
+
+Sales::bad_index::bad_index(int ix, const string& s) :std::logic_error(s), bi(ix)
+{
+}
+
+Sales::Sales(int yy, const double* gr, int n)
+{
+	year = y;
+	int  lim = (n < MONTHS) ? n : MONTHS;
+	int i;
+	for (i = 0; i < lim; i++)
+		gross[i] = gr[i];
+	for (; i < MONTHS; i++)
+		gross[i] = 0;
+}
+
+double Sales::operator[](int i) const
+{
+	if (i < 0 || i >= MONTHS)
+		throw bad_index(i);
+	return gross[i];
+}
+
+double& Sales::operator[](int i)
+{
+	if (i < 0 || i >= MONTHS)
+		throw bad_index(i);
+	return gross[i];
+}
+
+LabeledSales::nbad_index::nbad_index(const string& lb, int ix, const string& s) :Sales::bad_index(ix, s)
+{
+	lbl = lb;
+}
+
+LabeledSales::LabeledSales(const string& lb, int yy):Sales(yy)
+{
+	label = lb;
+}
+
+LabeledSales::LabeledSales(const string& lb, int yy, const double* gr, int n) : Sales(yy, gr, n)
+{
+	label = lb;
+}
+
+double LabeledSales::operator[](int i) const
+{
+	if (i < 0 || i >= MONTHS)
+		throw nbad_index(Label(), i);
+	return Sales::operator[](i);
+}
+
+double & LabeledSales::operator[](int i)
+{
+	if (i < 0 || i >= MONTHS)
+		throw nbad_index(Label(), i);
+	return Sales::operator[](i);
+}
+
+15.16 use_sales.cpp
+#include<iostream>
+#include"sales.h"
+
+int main()
+{
+	using std::cout;
+	using std::cin;
+	using std::endl;
+	double vals1[12] = { 1220,1100,1122,2212,1232,2334,2884,2393,3302,2922,3002,3544 };
+	double vals2[12] = { 12,11,22,21,32,34,28,29,33,29,32,35 };
+	Sales sales1(2011, vals1, 12);
+	LabeledSales sales2("Blogstar", 2012, vals2, 12);
+
+	cout << "First try block:\n";
+	try
+	{
+		int i;
+		cout << "Year = " << sales1.Year() << endl;
+		for (i = 0; i < 12; i++)
+		{
+			cout << sales1[i] << ' ';
+			if (i % 6 == 5)
+				cout << endl;
+		}
+		cout << "Year = " << sales2.Year() << endl;
+		cout << "Label = " << sales2.Label() << endl;
+		for (i = 0; i <= 12; ++i)
+		{
+			cout << sales2[i] << " ";
+			if (i % 6 == 5)
+				cout << endl;
+		}
+		cout << "End of try block 1.\n";
+	}
+	catch (LabeledSales::nbad_index& bad)
+	{
+		cout << bad.what();
+		cout << "Company: " << bad.label_val() << endl;
+		cout << "bad index: " << bad.bi_val() << endl;
+	}
+	catch (Sales::bad_index& bad)
+	{
+		cout << bad.what();
+		cout << "bad index: " << bad.bi_val() << endl;
+	}
+	cout << "\nNext try block:\n";
+	try
+	{
+		sales2[2] = 37.5;
+		sales1[20] = 23345;
+		cout << "End of try block 2.\n";
+	}
+	catch (LabeledSales::nbad_index& bad)
+	{
+		cout << bad.what();
+		cout << "Company: " << bad.label_val() << endl;
+		cout << "bad index: " << bad.bi_val() << endl;
+	}
+	catch (Sales::bad_index& bad)
+	{
+		cout << bad.what();
+		cout << "bad index: " << bad.bi_val() << endl;
+	}
+	cout << "done\n";
+	return 0;
+}
+
+
+15.17 rtti1.cpp
+#include<iostream>
+#include<cstdlib>
+#include<ctime>
+
+using std::cout;
+class Grand
+{
+private:
+	int hold;
+public:
+	Grand(int h=0):hold(h){}
+	virtual void Speak() const { cout << "I am a grand class!\n"; }
+	virtual int Value() const { return hold; }
+};
+
+class Superb :public Grand
+{
+public:
+	Superb(int h=0):Grand(h){}
+	void Speak() const { cout << "I am a superb class!\n"; }
+	virtual void Say() const { cout << "I hold the superb value of " << Value() << "!\n"; }
+
+};
+
+class Magnificent :public Superb
+{
+private:
+	char ch;
+public:
+	Magnificent(int h=0,char c='A'):Superb(h),ch(c){}
+	void Speak() const { cout << "I am a magnificent class!!!\n"; }
+	void Say() const { cout << "I hold the character " << ch << " and the integer " << Value() << "!\n"; }
+
+};
+
+Grand* GetOne();
+
+int main()
+{
+	std::srand(std::time(0));
+	Grand* pg;
+	Superb* ps;
+	for (int i = 0; i < 5; i++)
+	{
+		pg = GetOne();
+		pg->Speak();
+		if (ps = dynamic_cast<Superb*>(pg))
+			ps->Say();
+	}
+	return 0;
+}
+
+Grand* GetOne()
+{
+	Grand* p = new Grand(0);
+	switch (std::rand() % 3)
+	{
+	case 0:p = new Grand(std::rand() % 100);
+		break;
+	case 1:p = new Superb(std::rand() % 100);
+		break;
+	case 2:p = new Magnificent(std::rand() % 100, 'A' + std::rand() % 26);
+		break;
+	}
+	return p;
+}
+
+15.18 rtti2.cpp
+#include<iostream>
+#include<cstdlib>
+#include<ctime>
+#include<typeinfo>
+using namespace std;
+class Grand
+{
+private:
+	int hold;
+public:
+	Grand(int h=0):hold(h){}
+	virtual void Speak() const { cout << "I am a grand class!\n"; }
+	virtual int Value() const { return hold; }
+};
+
+class Superb :public Grand
+{
+public:
+	Superb(int h=0):Grand(h){}
+	void Speak() const { cout << "I am a superb class!\n"; }
+	virtual void Say() const { cout << "I hold the superb value of " << Value() << "!\n"; }
+
+};
+
+class Magnificent :public Superb
+{
+private:
+	char ch;
+public:
+	Magnificent(int h=0,char c='A'):Superb(h),ch(c){}
+	void Speak() const { cout << "I am a magnificent class!!!\n"; }
+	void Say() const { cout << "I hold the character " << ch << " and the integer " << Value() << "!\n"; }
+
+};
+
+Grand* GetOne();
+
+int main()
+{
+	std::srand(std::time(0));
+	Grand* pg;
+	Superb* ps;
+	for (int i = 0; i < 5; i++)
+	{
+		pg = GetOne();
+		cout << "Now processing type " << typeid(*pg).name() << ".\n";
+		pg->Speak();
+		if (ps = dynamic_cast<Superb*>(pg))
+			ps->Say();
+		if (typeid(Magnificent) == typeid(*pg))
+			cout << "Yes, you're really magnificent.\n";
+	}
+	return 0;
+}
+
+Grand* GetOne()
+{
+	Grand* p = new Grand(0);
+	switch (std::rand() % 3)
+	{
+	case 0:p = new Grand(std::rand() % 100);
+		break;
+	case 1:p = new Superb(std::rand() % 100);
+		break;
+	case 2:p = new Magnificent(std::rand() % 100, 'A' + std::rand() % 26);
+		break;
+	}
+	return p;
+}
+
+15.19 constcast.cpp
+#include<iostream>
+using std::cout;
+using std::endl;
+void change(const int* pt, int n);
+
+int main()
+{
+	int pop1 = 38383;
+	const int pop2 = 2000;
+
+	cout << "pop1,pop2: " << pop1 << ", " << pop2 << endl;
+	change(&pop1, -103);
+	change(&pop2, -103);
+	cout << "pop1,pop2: " << pop1 << ", " << pop2 << endl;
+	return 0;
+}
+
+void change(const int* pt, int n)
+{
+	int* pc;
+	pc = const_cast<int*>(pt);
+	*pc += n;
+}
