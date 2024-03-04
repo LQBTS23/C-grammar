@@ -592,3 +592,152 @@ int main()
 	cout << "Done.\n";
 	return 0;
 }
+
+16.19 usealgo.cpp
+#include<iostream>
+#include<string>
+#include<vector>
+#include<set>
+#include<map>
+#include<iterator>
+#include<algorithm>
+#include<cctype>
+using namespace std;
+
+char toLower(char ch) { return tolower(ch); }
+string& Tolower(string& st);
+void display(const string& s);
+
+int main()
+{
+	vector<string> words;
+	cout << "Enter words(enter quit to quit):\n";
+	string input;
+	while (cin >> input && input != "quit")
+		words.push_back(input);
+
+	cout << "You entered the following words:\n";
+	for_each(words.begin(), words.end(), display);
+	cout << endl;
+
+	//place words in set, converting to lowercase
+	set<string> wordset;
+	transform(words.begin(), words.end(), insert_iterator<set<string>>(wordset, wordset.begin()), Tolower);
+	cout << "\nAlphabetic list of words:\n";
+	for_each(wordset.begin(), wordset.end(), display);
+	cout << endl;
+
+	//place word and frequency in map
+	map<string, int> wordmap;
+	set<string>::iterator si;
+	for (si = wordset.begin(); si!= wordset.end(); si++)
+		wordmap[*si] = count(words.begin(), words.end(), *si);
+
+	cout << "\nWord frequency:\n";
+	for (si = wordset.begin(); si != wordset.end(); si++)
+		cout << *si << ": " << wordmap[*si] << endl;
+
+	return 0;
+
+}
+
+string& Tolower(string& st)
+{
+	transform(st.begin(), st.end(), st.begin(), toLower);
+	return st;
+}
+
+void display(const string& s)
+{
+	cout << s << " ";
+}
+
+16.20 valvect.cpp
+#include<iostream>
+#include<valarray>
+#include<vector>
+#include<algorithm>
+
+int main()
+{
+	using namespace std;
+	vector<double> data;
+	double temp;
+
+	cout << "Enter numbers (<=0 to quit):\n";
+	while (cin >> temp && temp > 0)
+		data.push_back(temp);
+	sort(data.begin(), data.end());
+	int size = data.size();
+	valarray<double> numbers(size);
+	int i;
+	for (i = 0; i < size; i++)
+		numbers[i] = data[i];
+	valarray<double> sq_rts(size);
+	sq_rts = sqrt(numbers);
+	valarray<double> results(size);
+	results = numbers + 2.0 * sq_rts;
+	cout.setf(ios_base::fixed);
+	cout.precision(4);
+	for (i = 0; i < size; i++)
+	{
+		cout.width(8);
+		cout << numbers[i] << ": ";
+		cout.width(8);
+		cout << results[i] << endl;
+	}
+	cout << "done\n";
+	return 0;
+}
+
+16.21 vslice.cpp
+#include<iostream>
+#include<valarray>
+#include<cstdlib>
+
+const int SIZE = 12;
+typedef std::valarray<int> vint;
+void show(const vint& v, int cols);
+int main()
+{
+	using std::slice;
+	using std::cout;
+	vint valint(SIZE);   //think of as 4 rows of 3
+	int i;
+	for (i = 0; i < SIZE; i++)
+		valint[i] = std::rand() % 10;
+	cout << "Original array:\n";
+	show(valint, 3);
+	vint vcol(valint[slice(1, 4, 3)]);
+	cout << "Second column:\n";
+	show(vcol, 1);
+	vint vrow(valint[slice(3, 3, 1)]);
+	cout << "Second row:\n";
+	show(vrow, 3);
+	valint[slice(2, 4, 3)] = 10;
+	cout << "Set last column to 10:\n";
+	show(valint, 3);
+	cout << "Set first column to sum of next two:\n";
+	valint[slice(0, 4, 3)] = vint(valint[slice(1, 4, 3)]) + vint(valint[slice(2, 4, 3)]);
+	show(valint, 3);
+	return 0;
+}
+
+void show(const vint& v, int cols)
+{
+	using std::cout;
+	using std::endl;
+
+	int lim = v.size();
+	for (int i = 0; i < lim; ++i)
+	{
+		cout.width(3);
+		cout << v[i];
+		if (i % cols == cols - 1)
+			cout << endl;
+		else
+			cout << ' ';
+	}
+	//if (lim % cols != 0)
+		//cout << endl;
+}
