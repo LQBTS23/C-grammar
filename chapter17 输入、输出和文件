@@ -27,3 +27,167 @@ int main()
 
 	return 0;
 }
+
+17.2 defaults.cpp
+#include<iostream>
+int main()
+{
+	using std::cout;
+	cout << "1234567890234567890\n";
+	char ch = 'K';
+	int t = 273;
+	cout << ch << ":\n";
+	cout << t << ":\n";
+	cout << -t << ":\n";
+
+	double f1 = 1.200;
+	cout << f1 << ":\n";
+	cout << (f1 + 1.0 / 9.0) << ":\n";
+
+	double f2 = 1.67E2;
+	cout << f2 << ":\n";
+	f2 += 1.0 / 9.0;
+	cout << f2 << ":\n";
+	cout << (f2 * 1.0e4) << ":\n";
+	double f3 = 2.3e-4;
+	cout << f3 << ":\n";
+	cout << f3 / 10 << ":\n";
+
+	return 0;
+}
+
+17.3 manip.cpp
+#include<iostream>
+int main()
+{
+	using namespace std;
+	cout << "Enter an integer: ";
+	int n;
+	cin >> n;
+
+	cout << "n     n*n\n";
+	cout << n << "    " << n * n << " (decimal)\n";
+
+	cout << hex;
+	cout << n << "    ";
+	cout << n * n << "(hexadecimal)\n";
+
+	cout << oct << n << "   " << n * n << "(octal)\n";
+
+	dec(cout);
+	cout << n << "    " << n * n << "(decimal)\n";
+	return 0;
+}
+
+17.6 precise.cpp
+#include<iostream>
+int main()
+{
+	using std::cout;
+	float price1 = 20.40;
+	float price2 = 1.9 + 9.0 / 9.0;
+
+	cout << "\"Furry Friends\" is $" << price1 << "!\n";
+	cout << "\"Fiery Friends\" is $" << price2 << "!\n";
+
+	cout.precision(2);
+	cout << "\"Furry Friends\" is $" << price1 << "!\n";
+	cout << "\"Fiery Friends\" is $" << price2 << "!\n";
+	return 0;
+}
+
+17.7 showpt.cpp
+#include<iostream>
+int main()
+{
+	using std::cout;
+	using std::ios_base;
+	float price1 = 20.40;
+	float price2 = 1.9 + 9.0 / 9.0;
+
+	cout.setf(ios_base::showpoint);
+	cout << "\"Furry Friends\" is $" << price1 << "!\n";
+	cout << "\"Fiery Friends\" is $" << price2 << "!\n";
+
+	cout.precision(2);
+	cout << "\"Furry Friends\" is $" << price1 << "!\n";
+	cout << "\"Fiery Friends\" is $" << price2 << "!\n";
+	return 0;
+}
+
+17.9 setf2.cpp
+#include<iostream>
+#include<cmath>
+
+int main()
+{
+	using namespace std;
+	//左对齐，显示加号，显示末尾0
+	cout.setf(ios_base::left, ios_base::adjustfield);
+	cout.setf(ios_base::showpos);
+	cout.setf(ios_base::showpoint);
+	cout.precision(3);
+
+	ios_base::fmtflags old = cout.setf(ios_base::scientific, ios_base::floatfield);
+	cout << "Left Justification:\n";
+	long n;
+	for (n = 1; n < 41; n += 10)
+	{
+		cout.width(4);
+		cout << n << "|";
+		cout.width(12);
+		cout << sqrt(double(n)) << "|\n";
+	}
+        //内部对齐
+	cout.setf(ios_base::internal, ios_base::adjustfield);
+	cout.setf(old, ios_base::floatfield);
+        
+	cout << "Internal Justification:\n";
+	for (n = 1; n < 41; n += 10)
+	{
+		cout.width(4);
+		cout << n << "|";
+		cout.width(12);
+		cout << sqrt(double(n)) << "|\n";
+	}
+
+	cout.setf(ios_base::right, ios_base::adjustfield);
+	cout.setf(ios_base::fixed, ios_base::floatfield);
+	cout << "Right Justification:\n";
+	for (n = 1; n < 41; n += 10)
+	{
+		cout.width(4);
+		cout << n << "|";
+		cout.width(12);
+		cout << sqrt(double(n)) << "|\n";
+	}
+	return 0;
+}
+
+17.10 iomanip.cpp
+#include<iostream>
+#include<cmath>
+#include<iomanip>
+int main()
+{
+	using namespace std;
+	cout << fixed << right;
+
+	cout << setw(6) << "N" << setw(14) << "square root"
+		<< setw(15) << "fourth root\n";
+
+	double root;
+	for (int n = 10; n <= 100; n += 10)
+	{
+		root = sqrt(double(n));
+		cout << setw(6) << setfill('.') << n << setfill(' ')
+			<< setw(12) << setprecision(3) << root
+			<< setw(14) << setprecision(4) << sqrt(root)
+			<< endl;
+	}
+	return 0;
+}
+
+
+
+
