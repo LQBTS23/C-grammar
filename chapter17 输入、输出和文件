@@ -216,6 +216,56 @@ int main()
 	return 0;
 }
 
+17.14 peeker.cpp
+#include<iostream>
+const int Limit = 255;
+
+int main()
+{
+	using std::cout;
+	using std::cin;
+	using std::endl;
+
+	char ch;
+	while (cin.get(ch))
+	{
+		if (ch != '#')
+			cout << ch;
+		else
+		{
+			cin.putback(ch);
+			break;
+		}
+	}
+	if (!cin.eof())
+	{
+		cin.get(ch);
+		cout << endl << ch << " is next input character.\n";
+	}
+	else
+	{
+		cout << "End of file reached.\n";
+		std::exit(0);
+	}
+
+	while (cin.peek() != '#')
+	{
+		cin.get(ch);
+		cout << ch;
+	}
+	
+	if (!cin.eof())
+	{
+		cin.get(ch);
+		cout << endl << ch << " is next input character.\n";
+	}
+	else
+		cout << "End of file reached.\n";
+
+	return 0;
+}
+
+
 17.15 truncate.cpp
 #include<iostream>
 #include<exception>
@@ -245,6 +295,58 @@ int main()
 	cout << " Name: " << name
 		<< "\nTitle: " << title << endl;
 
+	return 0;
+}
+
+17.18 append.cpp
+#include<iostream>
+#include<fstream>
+#include<string>
+#include<cstdlib>
+
+const char* file = "guests.txt";
+int main()
+{
+	using namespace std;
+	char ch;
+	ifstream fin;
+	fin.open(file);
+
+	if (fin.is_open())
+	{
+		cout << "Here are the current contents of the " << file << " file:\n";
+		while (fin.get(ch))
+			cout << ch;
+		fin.close();
+	}
+
+	//add new names;
+	ofstream fout(file, ios::out | ios::app);
+	if (!fout.is_open())
+	{
+		cerr << "Can't open " << file << " file for output.\n";
+		exit(EXIT_FAILURE);
+	}
+
+	cout << "Enter guest names （enter a blank line to quit):\n";
+	string name;
+	while (getline(cin, name) && name.size() > 0)
+	{
+		fout << name << endl;
+	}
+	fout.close();
+
+	fin.clear();
+	fin.open(file);
+	if (fin.is_open())
+	{
+		cout << "Here are the current contents of the " << file << " file:\n";
+		while (fin.get(ch))
+			cout << ch;
+		fin.close();
+	}
+
+	cout << "Done.\n";
 	return 0;
 }
 
